@@ -29,18 +29,7 @@ router.post("/send", async (req, res) => {
 });
 
 
-// router.patch("/read/:id", async (req, res) => {
-//   try {
-//     await Notification.findByIdAndUpdate(
-//       req.params.id,
-//       { read: true }
-//     );
 
-//     res.json({ success: true });
-//   } catch (err) {
-//     res.status(500).json({ error: "Failed to mark as read" });
-//   }
-// });
 
 router.patch("/read/:id", async (req, res) => {
   await Notification.findByIdAndUpdate(req.params.id, {
@@ -49,20 +38,6 @@ router.patch("/read/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-// router.get("/user/:userId", async (req, res) => {
-//   try {
-//     const notifications = await Notification.find({
-//       userId: req.params.userId,
-//       read: false        
-//     })
-//       .populate("vacancyId", "title")
-//       .sort({ createdAt: -1 });
-
-//     res.json(notifications);
-//   } catch (err) {
-//     res.status(500).json({ error: "Failed to fetch notifications" });
-//   }
-// });
 
 router.get("/user/:userId", async (req, res) => {
   const { unreadOnly } = req.query;

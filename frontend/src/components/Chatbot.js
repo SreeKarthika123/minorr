@@ -45,7 +45,7 @@ export default function Chatbot({ userId, onClose }) {
 
       // --- Handle job lists (match_jobs) ---
       if (data.data && Array.isArray(data.data)) {
-        data.data.forEach((job) => {
+        data.data.forEach((job) => { 
           botMessages.push({
             from: "bot",
             text: `📌 ${job.title}\n `,

@@ -19,7 +19,7 @@ import UserProfileView from "./components/UserProfileView";
 import Applications from "./components/Applications"
 import Analytics from "./components/Analytics";
 import HRLayout from "./layouts/HRLayout";
-
+import RoleSelection from "./components/RoleSelection";
 function App() {
   const storedUser = localStorage.getItem("user");
   const [user, setUser] = useState(
@@ -33,16 +33,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public / Generic Routes */}
         <Route
+          path="/"
+          element={<RoleSelection />}
+        />
+       
+<Route
+  path="/hr-login"
+  element={user && user.role === "hr" ? <Navigate to="/home" /> : <HRLogin setUser={setUser} />}
+/>
+
+{/* Employee Login */}
+<Route
   path="/login"
-  element={
-    user ? (
-      user.role === "hr" ? <Navigate to="/home" /> : <Navigate to="/dashboard" />
-    ) : (
-      <Login setUser={setUser} />
-    )
-  }
+  element={user && user.role !== "hr" ? <Navigate to="/dashboard" /> : <Login setUser={setUser} />}
 />
         {/* <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login setUser={setUser} />} /> */}
         <Route path="/signup" element={user ? <Navigate to="/dashboard" /> : <Signup setUser={setUser} />} />

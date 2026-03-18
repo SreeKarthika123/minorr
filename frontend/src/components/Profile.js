@@ -222,28 +222,7 @@ useEffect(() => {
     setIsAnalyzing(false);
   }
 };
-  // const handleFileChange = async (e) => {
-  //   const file = e.target.files[0];
-  //   if (!file) return;
-  //   setResumeFile(file);
-  //   setAtsAnalyzed(false);
-  //   try {
-  //     setIsAnalyzing(true);
-  //     const formData = new FormData();
-  //     formData.append("resume", file);
-  //     const uploadRes = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`, {
-  //       method: "PUT", body: formData,
-  //     });
-  //     const data = await uploadRes.json();
-  //     if (!uploadRes.ok) throw new Error(data.message || "Upload failed");
-  //     setProfile((prev) => ({ ...prev, resume: data.user.resume }));
-  //     await handleAnalyze();
-  //   } catch (err) {
-  //     showToast(err.message || "Failed to upload resume", "error");
-  //   } finally {
-  //     setIsAnalyzing(false);
-  //   }
-  // };
+ 
 
   const handleSkillKey = (e) => {
     if (e.key === "Enter" && skillInput.trim()) {

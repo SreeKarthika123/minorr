@@ -640,6 +640,8 @@ export default function CreateJob() {
   }, [id, isEdit]);
  
   const today = new Date().toISOString().split("T")[0];
+
+  const isExpired = expiresOn && new Date(expiresOn) < new Date();
  
   const toggleType = (t) =>
     setTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
@@ -829,22 +831,27 @@ export default function CreateJob() {
           </div>
  
           {/* ── Submit ── */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl
-                       text-sm font-bold text-white transition-all duration-200
-                       disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{
-              background: "linear-gradient(135deg,#2563eb,#7c3aed)",
-              boxShadow: "0 4px 18px rgba(99,102,241,0.3)",
-            }}
-          >
-            <Send size={15} />
-            {submitting
-              ? (isEdit ? "Updating…" : "Publishing…")
-              : (isEdit ? "Update Vacancy" : "Publish Job")}
-          </button>
+       <button
+  type="submit"
+  disabled={submitting || isExpired}
+  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl
+             text-sm font-bold text-white transition-all duration-200
+             disabled:opacity-60 disabled:cursor-not-allowed"
+  style={{
+    background: isExpired
+      ? "#ccc"
+      : "linear-gradient(135deg,#2563eb,#7c3aed)",
+    boxShadow: isExpired ? "none" : "0 4px 18px rgba(99,102,241,0.3)",
+  }}
+>
+  {submitting
+    ? (isEdit ? "Updating…" : "Publishing…")
+    : isExpired
+    ? "Expired"
+    : isEdit
+    ? "Update Vacancy"
+    : "Publish Job"}
+</button>
  
         </form>
       </main>

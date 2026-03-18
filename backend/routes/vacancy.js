@@ -20,7 +20,12 @@ router.get("/:vacancyId/top-employees", async (req, res) => {
 
     // ATS scores
     vacancy.atsScores.forEach(a => {
-      employeesMap.set(a.userId._id.toString(), {
+      // a.userId → get user object
+
+// ._id → extract actual ID
+
+// .toString() → convert to usable key
+      employeesMap.set(a.userId._id.toString(), {    
         user: a.userId,
         atsScore: a.score,
         aiScore: null,

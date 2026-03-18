@@ -301,68 +301,6 @@ function extractProfileFromText(text) {
 }
 
 
-// exports.updateProfile = async (req, res) => {
-//   try {
-//     const user = await User.findById(req.params.id);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     const { name, phone, designation, skills } = req.body;
-
-//     user.name = name || user.name;
-//     user.phone = phone || user.phone;
-//     user.designation = designation || user.designation;
-
-//     if (skills) {
-//       try {
-//         const skillsArray = JSON.parse(skills);
-//         if (Array.isArray(skillsArray)) {
-//           user.skills = skillsArray;
-//         }
-//       } catch (err) {
-//         console.warn("Invalid skills JSON");
-//       }
-//     }
-
-// let resumeUpdated = false;
-
-//     if (req.file) {
-//       user.resume = `/uploads/${req.file.filename}`;
-//       user.atsAnalyzed = false; // 🔥 reset ATS
-//       resumeUpdated = true;     // ✅ FIX
-//     }
-//     await user.save();
-
-  
-//     if (resumeUpdated) {
-//       // 1️ Remove old scores for this user
-//       await Vacancy.updateMany(
-//         {},
-//         { $pull: { aiScores: { userId: user._id } } }
-//       );
-
-//       // 2️Trigger fresh analysis (background)
-//       fetch(`http://localhost:5000/api/ai/analyze-all/${user._id}`, {
-//         method: "POST"
-//       }).catch(() => {
-//         console.warn("AI analyze trigger failed");
-//       });
-//     }
-
-//     res.json({
-//       message: resumeUpdated
-//         ? "Profile updated. Resume re-analysis started."
-//         : "Profile updated successfully",
-//       user
-//     });
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 
 
 exports.updateProfile = async (req, res) => {

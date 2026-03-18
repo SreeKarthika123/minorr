@@ -21,7 +21,7 @@ export default function RoleSelection() {
             description: "Manage vacancies, analyze candidates, and oversee recruitment.",
             icon: ShieldCheck,
             color: "from-indigo-600 to-violet-600",
-            path: "/login",
+            path: "/hr-login",
         },
     ];
  

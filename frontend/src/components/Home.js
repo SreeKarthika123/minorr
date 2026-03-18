@@ -411,18 +411,18 @@ export default function Home() {
                     </div>
                     {/* Status Counts */}
                     <div className="flex gap-4 mt-3 px-1">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-amber-500 uppercase tracking-tighter">Pending</span>
-                        <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.pending || 0}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">Approved</span>
-                        <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.approved || 0}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-red-500 uppercase tracking-tighter">Rejected</span>
-                        <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.rejected || 0}</span>
-                      </div>
+                      {/* <div className="flex flex-col"> */}
+                        {/* <span className="text-[9px] font-bold text-amber-500 uppercase tracking-tighter">Pending</span> */}
+                        {/* <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.pending || 0}</span> */}
+                      {/* </div> */}
+                      {/* <div className="flex flex-col"> */}
+                        {/* <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">Approved</span> */}
+                        {/* <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.approved || 0}</span> */}
+                      {/* </div> */}
+                      {/* <div className="flex flex-col"> */}
+                        {/* <span className="text-[9px] font-bold text-red-500 uppercase tracking-tighter">Rejected</span> */}
+                        {/* <span className="text-xs font-bold text-gray-700">{appliedCounts[vac._id]?.rejected || 0}</span> */}
+                      {/* </div> */}
                     </div>
                   </div>
  

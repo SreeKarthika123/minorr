@@ -460,14 +460,14 @@
 // //                       </div>
 // //                     </div>
 
-                    
+
 // //                   );
 // //                 })}
 // //               </div>
 // //             )}
 // //           </div>
 
-          
+
 // //         )}
 // //       </div>
 // //     </div>
@@ -475,12 +475,9 @@
 // // }
 
 
-
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, CheckCircle2, XCircle, Clock, Mail, Phone, FileText, ExternalLink, Briefcase } from "lucide-react";
-import toast from "react-hot-toast"; // make sure you have this installed
+import { ChevronLeft, CheckCircle2, XCircle, Clock, Mail, Phone, FileText, ExternalLink, Briefcase, ChevronDown, Users, TrendingUp } from "lucide-react";
 
 const HIGH_MATCH = 37;
 const MEDIUM_MATCH = 34;
@@ -522,19 +519,76 @@ function ScoreRing({ value, color, label }) {
   );
 }
 
-const FILTERS = [
-  { key: "ALL", label: "All", activeColor: "#2563eb", activeBg: "#eff6ff", activeBorder: "#bfdbfe" },
-  { key: "APPROVED", label: "Approved", activeColor: "#059669", activeBg: "#ecfdf5", activeBorder: "#a7f3d0" },
-  { key: "PENDING", label: "Pending", activeColor: "#d97706", activeBg: "#fffbeb", activeBorder: "#fde68a" },
-  { key: "REJECTED", label: "Rejected", activeColor: "#e11d48", activeBg: "#fff1f2", activeBorder: "#fecdd3" },
+const STATUS_OPTIONS = [
+  { key: "ALL", label: "All Statuses", dot: "#94a3b8" },
+  { key: "APPROVED", label: "Approved", dot: "#10b981" },
+  { key: "PENDING", label: "Pending", dot: "#f59e0b" },
+  { key: "REJECTED", label: "Rejected", dot: "#f43f5e" },
 ];
+
+const MATCH_OPTIONS = [
+  { key: "ALL", label: "All Levels", dot: "#94a3b8" },
+  { key: "HIGH", label: "High Match", dot: "#10b981" },
+  { key: "MEDIUM", label: "Med Match", dot: "#f59e0b" },
+  { key: "LOW", label: "Low Match", dot: "#f43f5e" },
+];
+
+/* ── Reusable styled dropdown ── */
+function FilterDropdown({ icon: Icon, label, options, value, onChange, counts }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selected = options.find(o => o.key === value) || options[0];
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2.5 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 text-xs font-semibold text-gray-600 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-200 min-w-[160px] group"
+      >
+        <Icon size={13} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
+        <span className="text-gray-400 font-medium">{label}:</span>
+        <span className="flex items-center gap-1.5 ml-auto">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: selected.dot }} />
+          <span className="text-gray-700">{selected.label}</span>
+        </span>
+        <ChevronDown size={12} className={`text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-2 left-0 z-50 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-gray-200/80 overflow-hidden min-w-[180px] animate-in fade-in slide-in-from-top-1 duration-150">
+          {options.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => { onChange(opt.key); setOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold transition-colors ${value === opt.key ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"
+                }`}
+            >
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: opt.dot }} />
+              <span className="flex-1 text-left">{opt.label}</span>
+              <span className="text-[10px] text-gray-400 font-bold bg-gray-100 rounded-full px-1.5 py-0.5">
+                {counts[opt.key] ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function VacancyCandidates() {
   const { vacancyId } = useParams();
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [matchFilter, setMatchFilter] = useState("ALL");
 
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [fullProfile, setFullProfile] = useState(null);
@@ -572,27 +626,16 @@ export default function VacancyCandidates() {
 
   const handleStatusUpdate = async (userId, newStatus) => {
     if (!vacancyId || !userId) return;
-
     try {
       const response = await fetch(
         `http://localhost:5000/api/hr/vacancies/${vacancyId}/candidates/${userId}/status`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) }
       );
-
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.message || "Failed to update status");
 
       setSelectedCandidate(prev => ({ ...prev, status: newStatus }));
-
-      setCandidates(prev =>
-        prev.map(c => c.userId === userId ? { ...c, status: newStatus } : c)
-      );
-
+      setCandidates(prev => prev.map(c => c.userId === userId ? { ...c, status: newStatus } : c));
       alert(data.message);
     } catch (err) {
       console.error(err);
@@ -600,191 +643,42 @@ export default function VacancyCandidates() {
     }
   };
 
-  // ── FILTERED CANDIDATES & COUNTS ──
-  const filtered = candidates.filter(c => {
-    if (filter === "ALL") return true;
-    if (filter === "PENDING") return !c.status || c.status === "PENDING";
-    return c.status === filter;
+  // ── FILTERED & SORTED CANDIDATES ──
+  const matchStatus = (c) => {
+    if (statusFilter === "ALL") return true;
+    if (statusFilter === "PENDING") return !c.status || c.status === "PENDING";
+    return c.status === statusFilter;
+  };
+  const matchLevel = (c) => {
+    if (matchFilter === "ALL") return true;
+    return getMatchLevel(c.atsScore, c.aiScore).label === matchFilter;
+  };
+
+  const filtered = candidates.filter(c => matchStatus(c) && matchLevel(c));
+
+  const sortedCandidates = [...filtered].sort((a, b) => {
+    const priority = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+    return priority[getMatchLevel(b.atsScore, b.aiScore).label] - priority[getMatchLevel(a.atsScore, a.aiScore).label];
   });
 
-  const uniqueFiltered = Array.from(new Map(filtered.map(c => [c.userId, c])).values());
+  const uniqueFiltered = Array.from(new Map(sortedCandidates.map(c => [c.userId, c])).values());
 
-  const counts = {
+  // Status counts (ignoring match filter so dropdown always shows totals)
+  const statusCounts = {
     ALL: candidates.length,
     APPROVED: candidates.filter(c => c.status === "APPROVED").length,
     PENDING: candidates.filter(c => !c.status || c.status === "PENDING").length,
     REJECTED: candidates.filter(c => c.status === "REJECTED").length,
   };
+  // Match counts (ignoring status filter)
+  const matchCounts = {
+    ALL: candidates.length,
+    HIGH: candidates.filter(c => getMatchLevel(c.atsScore, c.aiScore).label === "HIGH").length,
+    MEDIUM: candidates.filter(c => getMatchLevel(c.atsScore, c.aiScore).label === "MEDIUM").length,
+    LOW: candidates.filter(c => getMatchLevel(c.atsScore, c.aiScore).label === "LOW").length,
+  };
 
 
-
-
-// import { useState, useEffect } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import { ChevronLeft, CheckCircle2, XCircle, Clock, User, Mail, Phone, Briefcase, FileText, ExternalLink } from "lucide-react";
- 
-// const HIGH_MATCH = 37;
-// const MEDIUM_MATCH = 34;
- 
-// function getMatchLevel(ats, ai) {
-//   const score = ats ?? ai;
-//   if (score >= HIGH_MATCH) return { label: "HIGH", bg: "#ecfdf5", text: "#059669", border: "#a7f3d0", dot: "#10b981" };
-//   if (score >= MEDIUM_MATCH) return { label: "MEDIUM", bg: "#fffbeb", text: "#d97706", border: "#fde68a", dot: "#f59e0b" };
-//   return { label: "LOW", bg: "#fff1f2", text: "#e11d48", border: "#fecdd3", dot: "#f43f5e" };
-// }
- 
-// function getStatusStyle(status) {
-//   if (status === "APPROVED") return { bg: "#ecfdf5", text: "#059669", border: "#a7f3d0", icon: <CheckCircle2 size={11} /> };
-//   if (status === "REJECTED") return { bg: "#fff1f2", text: "#e11d48", border: "#fecdd3", icon: <XCircle size={11} /> };
-//   return { bg: "#f8fafc", text: "#64748b", border: "#e2e8f0", icon: <Clock size={11} /> };
-// }
- 
-// /* ── Score ring ── */
-// function ScoreRing({ value, color, label }) {
-//   const r = 26;
-//   const circ = 2 * Math.PI * r;
-//   const pct = Math.min(Math.max(Number(value) || 0, 0), 100);
-//   const offset = circ - (pct / 100) * circ;
-//   return (
-//     <div className="flex flex-col items-center gap-1">
-//       <div className="relative w-14 h-14">
-//         <svg className="w-14 h-14 -rotate-90" viewBox="0 0 60 60">
-//           <circle cx="30" cy="30" r={r} strokeWidth="5" stroke="#e2e8f0" fill="none" />
-//           <circle cx="30" cy="30" r={r} strokeWidth="5" fill="none"
-//             stroke={color} strokeDasharray={circ} strokeDashoffset={offset}
-//             strokeLinecap="round" style={{ transition: "stroke-dashoffset 1s ease" }} />
-//         </svg>
-//         <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold"
-//           style={{ color }}>
-//           {value != null ? `${value}%` : "N/A"}
-//         </span>
-//       </div>
-//       <span className="text-[10px] text-gray-400 uppercase tracking-widest">{label}</span>
-//     </div>
-//   );
-// }
- 
-// const FILTERS = [
-//   { key: "ALL", label: "All", activeColor: "#2563eb", activeBg: "#eff6ff", activeBorder: "#bfdbfe" },
-//   { key: "APPROVED", label: "Approved", activeColor: "#059669", activeBg: "#ecfdf5", activeBorder: "#a7f3d0" },
-//   { key: "PENDING", label: "Pending", activeColor: "#d97706", activeBg: "#fffbeb", activeBorder: "#fde68a" },
-//   { key: "REJECTED", label: "Rejected", activeColor: "#e11d48", activeBg: "#fff1f2", activeBorder: "#fecdd3" },
-// ];
- 
-// export default function VacancyCandidates() {
-//   const { vacancyId } = useParams();
-//   const navigate = useNavigate();
-//   const [candidates, setCandidates] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [filter, setFilter] = useState("ALL");
- 
-//   // Detail view state
-//   const [selectedCandidate, setSelectedCandidate] = useState(null);
-//   const [fullProfile, setFullProfile] = useState(null);
-//   const [detailLoading, setDetailLoading] = useState(false);
- 
-//   useEffect(() => {
-//     fetchCandidates();
-//   }, [vacancyId]);
- 
-//   const fetchCandidates = () => {
-//     setLoading(true);
-//     fetch(`http://localhost:5000/api/hr/vacancies/${vacancyId}/candidates`)
-//       .then((r) => r.json())
-//       .then((d) => { setCandidates(d || []); setLoading(false); })
-//       .catch(() => setLoading(false));
-//   };
- 
-//   const fetchFullProfile = async (userId) => {
-//     setDetailLoading(true);
-//     try {
-//       const res = await fetch(`http://localhost:5000/api/auth/profile/${userId}`);
-//       const data = await res.json();
-//       setFullProfile(data);
-//     } catch (err) {
-//       console.error("Failed to fetch user profile", err);
-//     } finally {
-//       setDetailLoading(false);
-//     }
-//   };
- 
-//   const handleSelectCandidate = (candidate) => {
-//     setSelectedCandidate(candidate);
-//     fetchFullProfile(candidate.userId);
-//   };
-
-
-//   const handleStatusUpdate = async (userId, newStatus) => {
-//   if (!vacancyId || !userId) return;
-
-//   try {
-//     const response = await fetch(
-//       `http://localhost:5000/api/hr/vacancies/${vacancyId}/candidates/${userId}/status`,
-//       {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ status: newStatus }), // must match backend
-//       }
-//     );
-
-//     const data = await response.json();
-
-//     if (!response.ok) throw new Error(data.message || "Failed to update status");
-
-//     // Update selected candidate
-//     setSelectedCandidate(prev => ({
-//       ...prev,
-//       status: newStatus
-//     }));
-
-//     // Optionally update list view
-//     setCandidates(prev =>
-//       prev.map(c =>
-//         c.userId === userId ? { ...c, status: newStatus } : c
-//       )
-//     );
-
-//     toast.success(data.message);
-//   } catch (err) {
-//     console.error(err);
-//     toast.error(err.message);
-//   }
-// };
- 
-//   // const handleStatusUpdate = async (userId, status) => {
-//   //   try {
-//   //     const res = await fetch(`http://localhost:5000/api/hr/vacancies/${vacancyId}/candidates/${userId}/status`, {
-//   //       method: "POST",
-//   //       headers: { "Content-Type": "application/json" },
-//   //       body: JSON.stringify({ status })
-//   //     });
-//   //     if (res.ok) {
-//   //       // Update local state
-//   //       setCandidates(prev => prev.map(c => c.userId === userId ? { ...c, status } : c));
-//   //       if (selectedCandidate && selectedCandidate.userId === userId) {
-//   //         setSelectedCandidate({ ...selectedCandidate, status });
-//   //       }
-//   //     }
-//   //   } catch (err) {
-//   //     console.error("Status update failed", err);
-//   //   }
-//   // };
- 
-//   // const filtered = filter === "ALL"
-//   //   ? candidates
-//   //   : candidates.filter((c) => (c.status || "PENDING") === filter);
- 
-//   // const counts = {
-//   //   ALL: candidates.length,
-//   //   APPROVED: candidates.filter((c) => c.status === "APPROVED").length,
-//   //   PENDING: candidates.filter((c) => !c.status || c.status === "PENDING").length,
-//   //   REJECTED: candidates.filter((c) => c.status === "REJECTED").length,
-//   // };
-
-// // Remove duplicates by userId
-// const uniqueFiltered = Array.from(
-//   new Map(filtered.map(c => [c.userId, c])).values()
-// );
   return (
     <div className="flex-1 flex flex-col relative z-10 pb-6 px-6 md:pb-10 md:px-10">
       {/* Subtle bg shapes */}
@@ -794,9 +688,9 @@ export default function VacancyCandidates() {
         <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full opacity-20 blur-3xl"
           style={{ background: "radial-gradient(circle,#ddd6fe,transparent)" }} />
       </div>
- 
+
       <div className="space-y-7 relative z-10 max-w-7xl mx-auto w-full">
- 
+
         {/* Detail View */}
         {selectedCandidate ? (
           <div className="animate-in fade-in duration-300">
@@ -812,7 +706,7 @@ export default function VacancyCandidates() {
               </button>
               <h2 className="text-xl font-bold text-gray-800">Recruitment Profile</h2>
             </div>
- 
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column: Basic Info & Profile */}
               <div className="lg:col-span-1 space-y-6">
@@ -840,9 +734,9 @@ export default function VacancyCandidates() {
                           {selectedCandidate.status || "PENDING"}
                         </span>
                       </div>
- 
+
                       <div className="h-px bg-gray-50" />
- 
+
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 text-sm">
                           <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
@@ -875,7 +769,7 @@ export default function VacancyCandidates() {
                     </>
                   )}
                 </div>
- 
+
                 {/* Actions */}
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 flex gap-3">
                   <button
@@ -898,7 +792,7 @@ export default function VacancyCandidates() {
                   </button>
                 </div>
               </div>
- 
+
               {/* Right Columns: Analysis & Skills */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Scores View */}
@@ -910,17 +804,17 @@ export default function VacancyCandidates() {
                       {getMatchLevel(selectedCandidate.atsScore, selectedCandidate.aiScore).label} MATCH
                     </span>
                   </div>
- 
+
                   <div className="flex flex-wrap justify-around gap-8">
                     <ScoreRing value={selectedCandidate.atsScore} color="#3b82f6" label="ATS Score" />
                     <ScoreRing value={selectedCandidate.aiScore} color="#8b5cf6" label="AI Score" />
                   </div>
                 </div>
- 
+
                 {/* Skills Analysis */}
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
                   <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Skill Set</h4>
- 
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2">
@@ -958,7 +852,7 @@ export default function VacancyCandidates() {
                     </div>
                   </div>
                 </div>
- 
+
                 {/* AI Summary */}
                 {selectedCandidate.summary && (
                   <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-4 relative overflow-hidden">
@@ -1001,27 +895,42 @@ export default function VacancyCandidates() {
                   </p>
                 </div>
               </div>
- 
-              {/* Filter pills */}
-              <div className="flex gap-2 p-1 bg-white border border-gray-100 rounded-2xl shadow-sm overflow-x-auto whitespace-nowrap scrollbar-hide">
-                {FILTERS.map(({ key, label, activeColor, activeBg, activeBorder }) => {
-                  const active = filter === key;
-                  return (
+
+              {/* ── Filter Dropdowns ── */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <FilterDropdown
+                  icon={Users}
+                  label="Status"
+                  options={STATUS_OPTIONS}
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  counts={statusCounts}
+                />
+                <FilterDropdown
+                  icon={TrendingUp}
+                  label="Match"
+                  options={MATCH_OPTIONS}
+                  value={matchFilter}
+                  onChange={setMatchFilter}
+                  counts={matchCounts}
+                />
+                {/* Active-filter summary */}
+                {(statusFilter !== "ALL" || matchFilter !== "ALL") && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-gray-400 font-medium">
+                      {uniqueFiltered.length} result{uniqueFiltered.length !== 1 ? "s" : ""}
+                    </span>
                     <button
-                      key={key}
-                      onClick={() => setFilter(key)}
-                      className="px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300"
-                      style={active
-                        ? { background: activeBg, borderColor: activeBorder, color: activeColor }
-                        : { background: "transparent", borderColor: "transparent", color: "#9ca3af" }}
+                      onClick={() => { setStatusFilter("ALL"); setMatchFilter("ALL"); }}
+                      className="text-[10px] font-bold text-blue-500 hover:text-blue-700 border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-full transition-colors"
                     >
-                      {label} <span className="ml-1.5 opacity-60 text-[10px]">{counts[key]}</span>
+                      Clear
                     </button>
-                  );
-                })}
+                  </div>
+                )}
               </div>
             </div>
- 
+
             {/* Content Area */}
             {loading ? (
               <div className="flex flex-col items-center justify-center py-40 gap-4">
@@ -1036,97 +945,47 @@ export default function VacancyCandidates() {
             ) : (
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  {uniqueFiltered.map((candidate, idx) => {
-    const status = getStatusStyle(candidate.status);
-    const match = getMatchLevel(candidate.atsScore, candidate.aiScore);
+                {uniqueFiltered.map((candidate, idx) => {
+                  const status = getStatusStyle(candidate.status);
+                  const match = getMatchLevel(candidate.atsScore, candidate.aiScore);
 
-    return (
-      <div
-        key={`${candidate.userId}-${idx}`} // fully unique key
-        onClick={() => handleSelectCandidate(candidate)}
-        className="group bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-5 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer relative overflow-hidden"
-      >
-        {/* Top highlight bar */}
-        <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: match.dot }} />
+                  return (
+                    <div
+                      key={`${candidate.userId}-${idx}`} // fully unique key
+                      onClick={() => handleSelectCandidate(candidate)}
+                      className="group bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-5 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer relative overflow-hidden"
+                    >
+                      {/* Top highlight bar */}
+                      <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: match.dot }} />
 
-        <div className="flex items-start justify-between">
-          <div className="w-14 h-14 rounded-3xl flex items-center justify-center text-lg font-bold text-white shadow-xl group-hover:rotate-6 transition-all duration-500"
-            style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
-            {(candidate.name || "?")[0].toUpperCase()}
-          </div>
-          <span className="px-2.5 py-1 rounded-full text-[9px] font-bold border"
-            style={status.border === "#e2e8f0"
-              ? { background: "#f8fafc", color: "#64748b", borderColor: "#e2e8f0" }
-              : { background: status.bg, color: status.text, borderColor: status.border }}>
-            {candidate.status || "PENDING"}
-          </span>
-        </div>
+                      <div className="flex items-start justify-between">
+                        <div className="w-14 h-14 rounded-3xl flex items-center justify-center text-lg font-bold text-white shadow-xl group-hover:rotate-6 transition-all duration-500"
+                          style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
+                          {(candidate.name || "?")[0].toUpperCase()}
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[9px] font-bold border"
+                          style={status.border === "#e2e8f0"
+                            ? { background: "#f8fafc", color: "#64748b", borderColor: "#e2e8f0" }
+                            : { background: status.bg, color: status.text, borderColor: status.border }}>
+                          {candidate.status || "PENDING"}
+                        </span>
+                      </div>
 
-        <div>
-          <h3 className="text-sm font-black text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tighter leading-none">{candidate.name}</h3>
-          <p className="text-[11px] text-gray-400 truncate mt-1.5">{candidate.email}</p>
-        </div>
+                      <div>
+                        <h3 className="text-sm font-black text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tighter leading-none">{candidate.name}</h3>
+                        <p className="text-[11px] text-gray-400 truncate mt-1.5">{candidate.email}</p>
+                      </div>
 
-        <div className="flex items-center justify-center pt-1">
-          <span className="text-[10px] font-bold text-blue-500/0 group-hover:text-blue-500 transition-all duration-500 underline decoration-2 underline-offset-4">
-            View Analysis
-          </span>
-        </div>
-      </div>
-    );
-  })}
-</div>
-              // <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              //   {filtered.map((candidate) => {
-              //     const status = getStatusStyle(candidate.status);
-              //     const match = getMatchLevel(candidate.atsScore, candidate.aiScore);
-              //     return (
-              //       <div
-              //         key={candidate.userId}
-              //         onClick={() => handleSelectCandidate(candidate)}
-              //         className="group bg-white rounded-[2rem] border border-gray-100 shadow-sm p-5 space-y-5 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer relative overflow-hidden"
-              //       >
-              //         {/* Top highlight bar */}
-              //         <div className="absolute top-0 left-0 right-0 h-1.5" style={{ background: match.dot }} />
- 
-              //         <div className="flex items-start justify-between">
-              //           <div className="w-14 h-14 rounded-3xl flex items-center justify-center text-lg font-bold text-white shadow-xl group-hover:rotate-6 transition-all duration-500"
-              //             style={{ background: "linear-gradient(135deg,#3b82f6,#8b5cf6)" }}>
-              //             {(candidate.name || "?")[0].toUpperCase()}
-              //           </div>
-              //           <span className="px-2.5 py-1 rounded-full text-[9px] font-bold border"
-              //             style={status.border === "#e2e8f0"
-              //               ? { background: "#f8fafc", color: "#64748b", borderColor: "#e2e8f0" }
-              //               : { background: status.bg, color: status.text, borderColor: status.border }}>
-              //             {candidate.status || "PENDING"}
-              //           </span>
-              //         </div>
- 
-              //         <div>
-              //           <h3 className="text-sm font-black text-gray-800 group-hover:text-blue-600 transition-colors uppercase tracking-tighter leading-none">{candidate.name}</h3>
-              //           <p className="text-[11px] text-gray-400 truncate mt-1.5">{candidate.email}</p>
-              //         </div>
- 
-              //         {/* <div className="pt-4 flex items-center justify-between border-t border-gray-50">
-              //           <div className="flex flex-col">
-              //             <span className="text-[9px] font-extrabold text-gray-300 uppercase tracking-tighter mb-0.5">ATS</span>
-              //             <span className="text-sm font-black text-blue-600 leading-none">{candidate.atsScore}%</span>
-              //           </div>
-              //           <div className="flex flex-col items-end">
-              //             <span className="text-[9px] font-extrabold text-gray-300 uppercase tracking-tighter mb-0.5">AI</span>
-              //             <span className="text-sm font-black text-purple-600 leading-none">{candidate.aiScore}%</span>
-              //           </div>
-              //         </div> */}
- 
-              //         <div className="flex items-center justify-center pt-1">
-              //           <span className="text-[10px] font-bold text-blue-500/0 group-hover:text-blue-500 transition-all duration-500 underline decoration-2 underline-offset-4">
-              //             View Analysis
-              //           </span>
-              //         </div>
-              //       </div>
-              //     );
-              //   })}
-              // </div>
+                      <div className="flex items-center justify-center pt-1">
+                        <span className="text-[10px] font-bold text-blue-500/0 group-hover:text-blue-500 transition-all duration-500 underline decoration-2 underline-offset-4">
+                          View Analysis
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
             )}
           </div>
         )}

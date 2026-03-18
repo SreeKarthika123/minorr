@@ -59,6 +59,9 @@ router.get("/count-per-vacancy", async (req, res) => {
   }
 });
 
+
+
+
 // Update status of an application
 router.patch("/hr/application/:applicationId/status", async (req, res) => {
   const { applicationId } = req.params;

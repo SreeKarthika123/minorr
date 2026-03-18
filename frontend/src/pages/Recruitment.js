@@ -66,6 +66,9 @@ useEffect(() => {
   fetchAppliedJobs();
 }, [userId]);
 
+
+const isVacancyExpired = (vac) =>
+  vac.expiresOn && new Date(vac.expiresOn) < new Date();
   
 
   /* ================= FETCH VACANCIES ================= */
@@ -240,8 +243,28 @@ useEffect(() => {
     ) : "🤖 Check AI Match"}
   </button>
 
+
+  {/* APPLY NOW BUTTON */}
+{!isVacancyExpired(vac) && vac.atsScore?.score >= 37 ? (
+  <button
+    onClick={() => navigate(`/apply/${vac._id}`)}
+    disabled={appliedJobs.includes(vac._id)}
+    className={`px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-all duration-200
+      ${appliedJobs.includes(vac._id)
+        ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+        : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-indigo-200"
+      }`}
+  >
+    {appliedJobs.includes(vac._id) ? "Applied" : "Apply Now"}
+  </button>
+) : (
+  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-500 border border-gray-300">
+    {isVacancyExpired(vac) ? "Closed – Expired" : "Low match – improve your skills"}
+  </span>
+)}
+
   {/* APPLY NOW BUTTON - ONLY FOR HIGH MATCH */}
-  {vac.atsScore?.score >= 37 ? (
+  {/* {vac.atsScore?.score >= 37 ? (
     <button
       onClick={() => navigate(`/apply/${vac._id}`)}
       disabled={appliedJobs.includes(vac._id)}
@@ -257,7 +280,7 @@ useEffect(() => {
     <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
       Low match – improve your skills to apply
     </span>
-  )}
+  )} */}
 </div>
                             {/* <div className="mt-6 flex flex-wrap gap-3">
                               <button

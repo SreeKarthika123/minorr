@@ -1,15 +1,13 @@
-
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Mail, Lock, LogIn, Sparkles, ShieldCheck } from "lucide-react";
  
-export default function Login({ setUser }) {
+export default function HRLogin({ setUser }) {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("user"); // "user" or "hr"
- 
-  // Common states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
  
   // Hardcoded HR credentials
@@ -22,190 +20,139 @@ export default function Login({ setUser }) {
  
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError("");
  
-    if (tab === "hr") {
-      // HR login
+    // Simulate network delay for premium feel
+    setTimeout(() => {
       if (email === HR_CREDENTIALS.email && password === HR_CREDENTIALS.password) {
         localStorage.setItem("user", JSON.stringify(HR_CREDENTIALS));
-        setUser(HR_CREDENTIALS);
-        navigate("/home"); // HR dashboard
+        if (setUser) setUser(HR_CREDENTIALS);
+        navigate("/home");
       } else {
-        setError("Invalid HR email or password");
+        setError("Invalid HR credentials. Please try again.");
       }
-    } else {
-      // Regular user login
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
- 
-        const data = await res.json();
- 
-        if (res.ok) {
-          localStorage.setItem("accessToken", data.accessToken);
-          localStorage.setItem("refreshToken", data.refreshToken);
-          localStorage.setItem("user", JSON.stringify(data.user));
-          setUser(data.user);
-          navigate("/dashboard"); // user dashboard
-        } else {
-          setError(data.message || "Login failed");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Network error. Try again.");
-      }
-    }
+      setLoading(false);
+    }, 800);
   };
  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-900 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border border-gray-200 shadow-xl p-8">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+      {/* Decorative Background Elements - Slightly different for HR to differentiate */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-100/50 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-violet-100/50 rounded-full blur-[120px]" />
  
-        {/* Tab switch */}
-        <div className="flex justify-center mb-6 gap-4">
-          <button
-            className={`px-4 py-2 rounded-lg font-semibold transition ${tab === "user"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
-            onClick={() => setTab("user")}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative z-10 w-full max-w-md px-6"
+      >
+        {/* Logo / Branding */}
+        <div className="flex flex-col items-center mb-10">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="p-3 bg-white rounded-2xl shadow-sm border border-indigo-50 mb-4"
           >
-            User Login
-          </button>
-          <button
-            className={`px-4 py-2 rounded-lg font-semibold transition ${tab === "hr"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-200"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-              }`}
-            onClick={() => setTab("hr")}
+            <ShieldCheck className="w-8 h-8 text-indigo-600" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-center"
           >
-            HR Login
-          </button>
+            {/* <span className="text-indigo-600 font-black tracking-widest text-[11px] uppercase block mb-1">
+              Admin Portal
+            </span> */}
+            <h1 className="text-4xl font-black text-gray-900 tracking-tight">HR Login
+            </h1>
+          </motion.div>
         </div>
  
-        <h2 className="text-3xl font-bold mb-2 text-center text-gray-900">
-          {tab === "user" ? "Welcome Back 👋" : "HR Login"}
-        </h2>
-        <p className="text-sm text-gray-500 text-center mb-6">
-          {tab === "user"
-            ? "Login to access your dashboard"
-            : "Enter your HR credentials"}
-        </p>
+        {/* HR Login Card */}
+        <div className="bg-white border border-gray-100 rounded-[32px] p-10 shadow-xl shadow-indigo-100/20">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="p-4 bg-red-50 text-red-600 text-xs font-bold rounded-2xl border border-red-100 text-center"
+              >
+                {error}
+              </motion.div>
+            )}
  
-        {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+            {/* Email Field */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">
+                HR Email
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="hr@talentintelligence.com"
+                  className="block w-full pl-11 pr-4 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
  
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
-            required
-          />
-          <button
-            type="submit"
-            className={`w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r ${tab === "user" ? "from-blue-600 to-blue-500 shadow-blue-200" : "from-purple-600 to-purple-500 shadow-purple-200"
-              } hover:opacity-90 transition shadow-lg active:scale-[0.98]`}
-          >
-            Login
-          </button>
-        </form>
+            {/* Password Field */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest ml-1">
+                Access Code
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                </div>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="block w-full pl-11 pr-4 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-sm font-medium"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
  
-        {tab === "user" && (
-          <p className="text-sm text-gray-500 text-center mt-6">
-            Don’t have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-blue-600 font-medium hover:text-blue-500 hover:underline transition"
+            {/* Login Button */}
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-200 hover:shadow-indigo-300 transition-all disabled:opacity-70"
             >
-              Signup
-            </Link>
-          </p>
-        )}
-      </div>
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  Login
+                </>
+              )}
+            </motion.button>
+          </form>
+ 
+ 
+        </div>
+ 
+        {/* Back Link */}
+        {/* <p className="text-center mt-8 text-xs text-gray-400 font-medium">
+          Not an HR administrator? <Link to="/login" className="text-indigo-600 hover:underline">User Sign In</Link>
+        </p> */}
+      </motion.div>
     </div>
   );
 }
-// import { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-
-// export default function HRLogin({ setUser }) {
-//   const navigate = useNavigate();
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [error, setError] = useState("");
-
-//   // Hardcoded HR credentials
-//   const HR_CREDENTIALS = {
-//     email: "hr@gmail.com",
-//     password: "hr123",
-//     role: "hr",
-//     name: "HR Admin",
-//   };
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     if (email === HR_CREDENTIALS.email && password === HR_CREDENTIALS.password) {
-//       // Save HR info in localStorage (no token)
-//       localStorage.setItem("user", JSON.stringify(HR_CREDENTIALS));
-//        setUser(HR_CREDENTIALS); //
-//       navigate("/home"); // go to HR dashboard
-//     } else {
-//       setError("Invalid email or password");
-//     }
-//   };
-
-//   return (
-//     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-//       <form
-//         onSubmit={handleSubmit}
-//         className="bg-white p-8 rounded shadow-md w-96 space-y-4"
-//       >
-//         <h2 className="text-2xl font-bold text-center mb-4">HR Login</h2>
-
-//         {error && <p className="text-red-500">{error}</p>}
-
-//         <div>
-//           <label className="block mb-1 font-semibold">Email</label>
-//           <input
-//             type="email"
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             className="w-full border px-3 py-2 rounded"
-//             placeholder="hr@example.com"
-//             required
-//           />
-//         </div>
-
-//         <div>
-//           <label className="block mb-1 font-semibold">Password</label>
-//           <input
-//             type="password"
-//             value={password}
-//             onChange={(e) => setPassword(e.target.value)}
-//             className="w-full border px-3 py-2 rounded"
-//             placeholder="hr123"
-//             required
-//           />
-//         </div>
-
-//         <button className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">
-//           Login
-//         </button>
-//       </form>
-//     </div>
-//   );
-// }
+ 
