@@ -911,22 +911,8 @@ export default function Analytics() {
             <span className="text-xl text-gray-800 font-black">{vacancies?.length || 0} Openings</span>
             <p className="text-[11px] text-gray-400">Analyzed Vacancies</p>
           </div>
-          <div className="space-y-1.5">
-            <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block">Global Index</span>
-            <span className="text-xl text-indigo-600 font-black">
-              {jobsAvg.avgs.length ? (jobsAvg.avgs.reduce((a, b) => a + b, 0) / jobsAvg.avgs.length).toFixed(1) : "0.0"}
-            </span>
-            <p className="text-[11px] text-gray-400">Weighted Average</p>
-          </div>
-          <div className="space-y-1.5">
-            <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block">Update Frequency</span>
-            <div className="flex items-center gap-3">
-              <span className="text-xl text-gray-800 font-black">Real-time</span>
-              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]" />
-            </div>
-            <p className="text-[11px] text-gray-400">Syncing with ATS</p>
-          </div>
-        </div>
+         </div>
+       
       </GlassCard>
     </div>
   );

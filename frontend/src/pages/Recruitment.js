@@ -34,15 +34,33 @@ const [user, setUser] = useState(null);
 useEffect(() => {
   if (!userId) return;
 
-  const fetchUser = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}`);
-      const data = await res.json();
-      setUser(data);
-    } catch (err) {
-      console.error("Failed to fetch user info", err);
+const fetchUser = async () => {
+  try {
+    const res = await fetch(
+  `http://localhost:5000/api/auth/profile/${userId}`
+);
+    // const res = await fetch(`http://localhost:5000/api/users/${userId}`);
+
+    // ✅ check if response is OK
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
-  };
+
+    // ✅ check content type
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await res.text();
+      console.error("Received non-JSON response:", text);
+      throw new Error("Response is not JSON");
+    }
+
+    const data = await res.json();
+    setUser(data);
+
+  } catch (err) {
+    console.error("Failed to fetch user info", err);
+  }
+};
 
   fetchUser();
 }, [userId]);

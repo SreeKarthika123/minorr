@@ -140,6 +140,12 @@ useEffect(() => {
         skills: data.skills || [],
         resume: data.resume || null,
       });
+
+      if (data.resume) {
+  localStorage.setItem("hasResume", "true");
+} else {
+  localStorage.setItem("hasResume", "false");
+}
       setAtsAnalyzed(data.atsAnalyzed);
     } catch (err) {
       console.error("Failed to fetch profile:", err);
@@ -209,6 +215,7 @@ useEffect(() => {
     }
 
      if (data.user.resume) {
+      localStorage.setItem("hasResume", "true"); 
       pollAtsStatus(user.id);
     }
 

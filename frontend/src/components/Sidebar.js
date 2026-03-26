@@ -1,19 +1,31 @@
 import { Link, useLocation } from "react-router-dom";
 import { UserCircle2, Briefcase, LayoutDashboard, ClipboardList } from "lucide-react";
-
-const menuItems = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-
-  { name: "Profile", path: "/profile", icon: UserCircle2 },
-  
-  { name: "Recruitment", path: "/recruitment", icon: Briefcase },
-  { name: "Applications", path: "/applications", icon: ClipboardList },
-
-  // {name : "Dashboard" ,path:"/dashboard"},
-];
-
+import {useState , useEffect} from "react";
 export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
+
+  const [hasResume, setHasResume] = useState(
+    localStorage.getItem("hasResume") === "true"
+  );
+
+const menuItems = [
+  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, enabled: true },
+  { name: "Profile", path: "/profile", icon: UserCircle2, enabled: true },
+  { name: "Recruitment", path: "/recruitment", icon: Briefcase, enabled: hasResume },
+  { name: "Applications", path: "/applications", icon: ClipboardList, enabled: hasResume },
+];
+ useEffect(() => {
+    const checkResume = () => {
+      setHasResume(localStorage.getItem("hasResume") === "true");
+    };
+
+    window.addEventListener("storage", checkResume);
+
+    // also check on mount
+    checkResume();
+
+    return () => window.removeEventListener("storage", checkResume);
+  }, []);
 
   return (
     <div
@@ -37,20 +49,28 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
       {/* ── Nav ── */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {menuItems.map(({ name, path, icon: Icon }) => {
+     {menuItems.map(({ name, path, icon: Icon, enabled }) => {
           const isActive = location.pathname === path;
           return (
-            <Link
-              key={name}
-              to={path}
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-all duration-200 group
-                ${isActive
-                  ? "bg-indigo-50 text-indigo-600"
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-                }`}
-            >
+         <Link
+  key={name}
+  to={enabled ? path : "#"}
+  onClick={(e) => {
+    if (!enabled) {
+      e.preventDefault();
+      alert("Please upload your resume first 🚀");
+    } else {
+      setIsOpen(false);
+    }
+  }}
+  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+    ${enabled
+      ? isActive
+        ? "bg-indigo-50 text-indigo-600"
+        : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+      : "text-gray-300 cursor-not-allowed"
+    }`}
+>
               <div
                 className={`w-1 h-5 rounded-full transition-all duration-200 -ml-1
                   ${isActive ? "bg-indigo-500 opacity-100" : "opacity-0"}`}

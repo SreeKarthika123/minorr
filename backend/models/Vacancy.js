@@ -156,11 +156,11 @@
 
 const mongoose = require("mongoose");
 
-const PreScoreSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  score: Number,
-  embedding: { type: [Number] } // <-- store Gemini embedding vector instead of word freq map
-});
+// const PreScoreSchema = new mongoose.Schema({
+//   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+//   score: Number,
+//   embedding: { type: [Number] } // <-- store Gemini embedding vector instead of word freq map
+// });
 
 const vacancySchema = new mongoose.Schema(
   {
@@ -177,10 +177,10 @@ const vacancySchema = new mongoose.Schema(
     expiresOn: { type: Date, required: true },
     status: { type: String, default: "Active" },
     salary: { type: String },
-    skills: { type: [String], default: [] },
+     skills: { type: [String], default: [] },
 
     // ===== PRE-SCORES (AI/Manual) =====
-    preScores: [PreScoreSchema],
+    // preScores: [PreScoreSchema],
 // embedding: {
 //   type: [Number],
 //   default: []
@@ -194,17 +194,17 @@ const vacancySchema = new mongoose.Schema(
 
 
 // Vacancy Schema additions
-embedding: {
-  type: [Number],
-  default: []
-},
+// embedding: {
+//   type: [Number],
+//   default: []
+// },
 
-skillEmbeddings: [
-  {
-    skill: String,
-    embedding: [Number]
-  }
-],
+// skillEmbeddings: [
+//   {
+//     skill: String,
+//     embedding: [Number]
+//   }
+// ],
 atsScores: [
   {
     userId: {

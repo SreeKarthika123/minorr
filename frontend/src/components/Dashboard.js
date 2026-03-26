@@ -87,7 +87,7 @@ const [userProfile, setUserProfile] = useState(null);
 
 
  useEffect(() => {
-    const user = getUserId;
+    const user = getUserId();
 
     if (!user || user.role === "hr") {
       navigate("/login");
